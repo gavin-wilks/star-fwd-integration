@@ -29,6 +29,8 @@
 
 #include <vector>
 #include <memory>
+#include <cmath>
+#include <math.h>
 
 #include "StFwdTrackMaker/Common.h"
 
@@ -57,6 +59,7 @@ class TrackFitter {
 
         // the geometry manager that GenFit will use
         TGeoManager * gMan = nullptr;
+        mMisaligned = mConfig.get<bool>("Geometry:misaligned",false);
 
         // Setup the Geometry used by GENFIT
         TGeoManager::Import(mConfig.get<string>("Geometry", "fGeom.root").c_str());
@@ -96,63 +99,149 @@ class TrackFitter {
         // b) not provided in config
 
         // NOTE: these defaults are needed since the geometry file might not include FST (bug being worked on separately)
-        mFSTZLocations = fwdGeoUtils.fstZ(
-            mConfig.getVector<double>("TrackFitter.Geometry:fst", 
-                {140.286011, 154.286011, 168.286011 }
-                // 144.633,158.204,171.271
-            )
-        );
-
-        if ( fwdGeoUtils.fstZ( 0 ) < 1.0 ) { // returns 0.0 on failure
-            LOG_WARN << "Using FST z-locations from config or defautl, may not match hits" << endm;
+        // misaliged geometry change Gavin 10.11.21
+        
+        if(mMisaligned){
+            LOG_INFO << "Load from flattened geometry" << endm;
+            mFSTZLocations = fwdGeoUtils.fstmZ(
+                mConfig.getVector<double>("TrackFitter.Geometry:fst",
+                    //each row is a disk
+                    //colums are innerz, outerz, innerz, outerz for module "1" then module "2" on each disk
+                    {0.0}
+                )
+            );
+        }
+        else{
+            LOG_INFO << "Load from layered geomtry" << endm;
+            mFSTZLocations = fwdGeoUtils.fstZ(
+                mConfig.getVector<double>("TrackFitter.Geometry:fst",
+                    //each row is a disk
+                    //colums are innerz, outerz, innerz, outerz for module "1" then module "2" on each disk
+                    {0.0}
+                )
+            ); 
         }
 
-        const double dzInnerFst = 1.715 + 0.04; // cm relative to "center" of disk + residual...
-        const double dzOuterFst = 0.240 + 0.04; // cm relative to "center" of disk
+        //////////Commented out for misaligned geometry Gavin 10.11.21//////////////////
+
+        //mFSTZLocations = fwdGeoUtils.fstZ(
+        //    mConfig.getVector<double>("TrackFitter.Geometry:fst", 
+        //        {140.286011, 154.286011, 168.286011 }
+        //        // 144.633,158.204,171.271
+        //    )
+        //);
+
+        //if ( fwdGeoUtils.fstZ( 0 ) < 1.0 ) { // returns 0.0 on failure
+        //    LOG_WARN << "Using FST z-locations from config or defautl, may not match hits" << endm;
+        //} 
+
+        //for ( int ip = 0; ip < mFSTZLocations.size(); ip++ ) {
+        //    mFSTZLocations[ip] += 0.001;
+        //}     
+  
+        //const double dzInnerFst = 1.742; // cm relative to "center" of disk + residual...
+        //const double dzOuterFst = 0.347; // cm relative to "center" of disk
+        //////////////////////////////////////////////////////////////////////////////////
 
         // Now add the Si detector planes at the desired location
         std::stringstream sstr;
         sstr << "Adding FST Planes at: ";
         string delim = "";
+        //int plane_index = 0;
         for (auto z : mFSTZLocations) {
+            LOG_INFO << "FST z locations: " << z << endm;
             mFSTPlanes.push_back(
                 genfit::SharedPlanePtr(
                     // these normals make the planes face along z-axis
                     new genfit::DetPlane(TVector3(0, 0, z), TVector3(1, 0, 0), TVector3(0, 1, 0) )
                 )
             );
-
-            // Inner Module FST planes
-            mFSTPlanesInner.push_back(
-                genfit::SharedPlanePtr(
-                    // these normals make the planes face along z-axis
-                    new genfit::DetPlane(TVector3(0, 0, z - dzInnerFst), TVector3(1, 0, 0), TVector3(0, 1, 0) )
-                )
-            );
-            mFSTPlanesInner.push_back(
-                genfit::SharedPlanePtr(
-                    // these normals make the planes face along z-axis
-                    new genfit::DetPlane(TVector3(0, 0, z + dzInnerFst), TVector3(1, 0, 0), TVector3(0, 1, 0) )
-                )
-            );
-            // Outer Module FST planes
-            mFSTPlanesOuter.push_back(
-                genfit::SharedPlanePtr(
-                    // these normals make the planes face along z-axis
-                    new genfit::DetPlane(TVector3(0, 0, z - dzOuterFst), TVector3(1, 0, 0), TVector3(0, 1, 0) )
-                )
-            );
-            mFSTPlanesOuter.push_back(
-                genfit::SharedPlanePtr(
-                    // these normals make the planes face along z-axis
-                    new genfit::DetPlane(TVector3(0, 0, z + dzOuterFst), TVector3(1, 0, 0), TVector3(0, 1, 0) )
-                )
-            );
-
-            sstr << delim << z << " (-dzInner=" << z - dzInnerFst << ", +dzInner=" << z+dzInnerFst << ", -dzOuter=" << z - dzOuterFst << ", +dzOuter=" << z + dzOuterFst << ")";
-            delim = ", ";
-        }
-        LOG_INFO  << sstr.str() << endm;
+        } 
+        
+        mFSTPlanesCenter.push_back(
+            genfit::SharedPlanePtr(
+                // these normals make the planes face along z-axis
+                new genfit::DetPlane(TVector3(0, 0, 149.713), TVector3(1, 0, 0), TVector3(0, 1, 0) )
+            )
+        );
+       
+        mFSTPlanesCenter.push_back(
+            genfit::SharedPlanePtr(
+                // these normals make the planes face along z-axis
+                new genfit::DetPlane(TVector3(0, 0, 163.284), TVector3(1, 0, 0), TVector3(0, 1, 0) )
+            )
+        );
+  
+        mFSTPlanesCenter.push_back(
+            genfit::SharedPlanePtr(
+                // these normals make the planes face along z-axis
+                new genfit::DetPlane(TVector3(0, 0, 176.35), TVector3(1, 0, 0), TVector3(0, 1, 0) )
+            )
+        ); 
+        
+        //////////Commented out for misaligned geometry Gavin 10.11.21//////////////////
+        //if ( plane_index != 1){
+        //    // Inner Module FST planes
+        //    mFSTPlanesInner.push_back(
+        //        genfit::SharedPlanePtr(
+        //            // these normals make the planes face along z-axis
+        //            new genfit::DetPlane(TVector3(0, 0, z - dzInnerFst), TVector3(1, 0, 0), TVector3(0, 1, 0) )
+        //        )
+        //    );
+        //    mFSTPlanesInner.push_back(
+        //        genfit::SharedPlanePtr(
+        //            // these normals make the planes face along z-axis
+        //            new genfit::DetPlane(TVector3(0, 0, z + dzInnerFst), TVector3(1, 0, 0), TVector3(0, 1, 0) )
+        //        )
+        //    );
+        //    // Outer Module FST planes
+        //    mFSTPlanesOuter.push_back(
+        //        genfit::SharedPlanePtr(
+        //            // these normals make the planes face along z-axis
+        //            new genfit::DetPlane(TVector3(0, 0, z - dzOuterFst), TVector3(1, 0, 0), TVector3(0, 1, 0) )
+        //        )
+        //    );
+        //    mFSTPlanesOuter.push_back(
+        //        genfit::SharedPlanePtr(
+        //            // these normals make the planes face along z-axis
+        //            new genfit::DetPlane(TVector3(0, 0, z + dzOuterFst), TVector3(1, 0, 0), TVector3(0, 1, 0) )
+        //        )
+        //    );
+        //    }
+        //    else {
+        //     // Inner Module FST planes
+        //    mFSTPlanesInner.push_back(
+        //        genfit::SharedPlanePtr(
+        //            // these normals make the planes face along z-axis
+        //            new genfit::DetPlane(TVector3(0, 0, z + dzInnerFst), TVector3(1, 0, 0), TVector3(0, 1, 0) )
+        //        )
+        //    );
+        //    mFSTPlanesInner.push_back(
+        //        genfit::SharedPlanePtr(
+        //            // these normals make the planes face along z-axis
+        //            new genfit::DetPlane(TVector3(0, 0, z - dzInnerFst), TVector3(1, 0, 0), TVector3(0, 1, 0) )
+        //        )
+        //    );
+        //    // Outer Module FST planes
+        //    mFSTPlanesOuter.push_back(
+        //        genfit::SharedPlanePtr(
+        //            // these normals make the planes face along z-axis
+        //            new genfit::DetPlane(TVector3(0, 0, z + dzOuterFst), TVector3(1, 0, 0), TVector3(0, 1, 0) )
+        //        )
+        //    );
+        //    mFSTPlanesOuter.push_back(
+        //        genfit::SharedPlanePtr(
+        //            // these normals make the planes face along z-axis
+        //            new genfit::DetPlane(TVector3(0, 0, z - dzOuterFst), TVector3(1, 0, 0), TVector3(0, 1, 0) )
+        //        )
+        //    )
+        //    }
+        //    plane_index++; 
+        //    sstr << delim << z << " (-dzInner=" << z - dzInnerFst << ", +dzInner=" << z+dzInnerFst << ", -dzOuter=" << z - dzOuterFst << ", +dzOuter=" << z + dzOuterFst << ")";
+        //    delim = ", ";
+        //}
+        //LOG_INFO  << sstr.str() << endm;
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Now load FTT
         // mConfig.getVector<>(...) requires a default, hence the 
@@ -390,19 +479,19 @@ class TrackFitter {
 
 
     genfit::MeasuredStateOnPlane projectToFst(size_t si_plane, genfit::Track *fitTrack) {
-        if (si_plane > 2) {
+        if (si_plane > 2) { 
             genfit::MeasuredStateOnPlane nil;
             return nil;
         }
 
-        auto detSi = mFSTPlanes[si_plane];
+        auto detSi = mFSTPlanesCenter[si_plane];
         genfit::MeasuredStateOnPlane tst = fitTrack->getFittedState(1);
         auto TCM = fitTrack->getCardinalRep()->get6DCov(tst);
-        //  can get the track length if needed
+        //  can get the track length if needed 
         // double len = fitTrack->getCardinalRep()->extrapolateToPlane(tst, detSi, false, true);
 
         TCM = fitTrack->getCardinalRep()->get6DCov(tst);
-
+        
         // can get the projected positions if needed
         // float x = tst.getPos().X();
         // float y = tst.getPos().Y();
@@ -415,24 +504,45 @@ class TrackFitter {
     genfit::SharedPlanePtr getFstPlane( FwdHit * h ){
 
         size_t planeId = h->getSector();
-
-        TVector3 hitXYZ( h->getX(), h->getY(), h->getZ() );
-
-        double phi = hitXYZ.Phi();
-        if ( phi < 0 ) phi = TMath::Pi() * 2 + phi;
-        const double phi_slice = phi / (TMath::Pi() / 6.0); // 2pi/12
-        const int phi_index = ((int)phi_slice);
-        const double r  =sqrt( pow(hitXYZ.x(), 2) + pow(hitXYZ.y(), 2) );
-
-        const size_t idx = phi_index % 2;
-        auto planeCorr = mFSTPlanesInner[planeId*2 + idx];
-        if ( r > 16 ){
-            planeCorr = mFSTPlanesOuter[planeId*2 + idx];
+        size_t moduleId = h->getModule();
+        size_t sensorId = h->getSensor(); 
+        
+        if(!mMisaligned){
+          size_t sensorIdx = planeId*36 + moduleId*3 + sensorId;
+          //LOG_INFO << "plane: " << planeId << "| module: " << moduleId << "| sensor: " << sensorId << "| sensorIdx: " << sensorIdx << "   PREVIOUS MODULE MAPPING" << endm;
+          moduleId = mModuleMap[planeId][moduleId];
+          sensorId = mSensorMap[sensorId];
         }
-        double cdz = (h->getZ() - planeCorr->getO().Z());
+     
+        size_t sensorIdx = planeId*36 + moduleId*3 + sensorId;
 
+        //LOG_INFO << "plane: " << planeId << "| module: " << moduleId << "| sensor: " << sensorId << "| sensorIdx: " << sensorIdx << endm;
+       
+        auto planeCorr = mFSTPlanes[sensorIdx];
+
+
+        //Old method for determining the sensor z position//
+        //TVector3 hitXYZ( h->getX(), h->getY(), h->getZ() );
+
+        //double phi = hitXYZ.Phi();
+        //if ( phi < 0 ) phi = TMath::Pi() * 2 + phi;
+        //const double phi_slice = phi / (TMath::Pi() / 6.0); // 2pi/12
+        //const int phi_index = ((int)phi_slice);
+        //const double r  =sqrt( pow(hitXYZ.x(), 2) + pow(hitXYZ.y(), 2) );
+
+        //const size_t idx = phi_index % 2;
+        //auto planeCorr = mFSTPlanesInner[planeId*2 + idx];
+        //if ( r > 16.5 ){
+        //    planeCorr = mFSTPlanesOuter[planeId*2 + idx];
+        //}
+        ///////////////////////////////////////////////////
+
+        double cdz = std::abs(h->getZ() - planeCorr->getO().Z());
+        
+        //LOG_INFO << "h->Z - planeZ: " << cdz << endm;
+        
         if ( cdz > 0.010 ) {
-            LOG_WARN << "FST Z =" << h->getZ() << " vs CORR Plane Z = " << planeCorr->getO().Z() << " DIFF: " << cdz << " phi_slice = " << phi_slice << ", phi_index = " << phi_index << " R=" << hitXYZ.Pt() << " idx=" << idx << endm;
+            LOG_WARN << "FST Z =" << h->getZ() << " vs CORR Plane Z = " << planeCorr->getO().Z() << " DIFF: " << h->getZ() - planeCorr->getO().Z() << endm;
         }
 
         return planeCorr;
@@ -446,7 +556,6 @@ class TrackFitter {
     TVector3 refitTrackWithSiHits(genfit::Track *originalTrack, Seed_t si_hits) {
         // mem leak, global track is overwritten without delete.
         TVector3 pOrig = originalTrack->getCardinalRep()->getMom(originalTrack->getFittedState(1, originalTrack->getCardinalRep()));
-        
         // auto cardinalStatus = originalTrack->getFitStatus(originalTrack->getCardinalRep());
 
         if (originalTrack->getFitStatus(originalTrack->getCardinalRep())->isFitConverged() == false) {
@@ -468,6 +577,7 @@ class TrackFitter {
         }
 
         TVectorD rawCoords = trackPoints[0]->getRawMeasurement()->getRawHitCoords();
+  
         double z = mFSTZLocations[0]; //first FTT plane, used if we dont have PV in fit
         if (mIncludeVertexInFit)
             z = rawCoords(2);
@@ -510,6 +620,7 @@ class TrackFitter {
                 LOG_WARN << "invalid VolumId -> out of bounds DetPlane, vid = " << planeId << endm;
                 return pOrig;
             }
+            
 
             // auto plane = mFSTPlanes[planeId];
             auto plane = getFstPlane( static_cast<FwdHit*>(h) );
@@ -517,38 +628,38 @@ class TrackFitter {
             measurement->setPlane(plane, planeId);
             fitTrack.insertPoint(new genfit::TrackPoint(measurement, &fitTrack));
 
+            
+            //TVector3 hitXYZ( h->getX(), h->getY(), h->getZ() );
+            //float phi = hitXYZ.Phi();
+            //if ( phi < 0 ) phi = TMath::Pi() * 2 + phi;
+            //double phi_slice = phi / (TMath::Pi() / 6.0); // 2pi/12
+            //int phi_index = ((int)phi_slice);
+            //double dz = (h->getZ() - plane->getO().Z());
 
-            TVector3 hitXYZ( h->getX(), h->getY(), h->getZ() );
-            float phi = hitXYZ.Phi();
-            if ( phi < 0 ) phi = TMath::Pi() * 2 + phi;
-            double phi_slice = phi / (TMath::Pi() / 6.0); // 2pi/12
-            int phi_index = ((int)phi_slice);
-            double dz = (h->getZ() - plane->getO().Z());
+            //double r  =sqrt( pow(hitXYZ.x(), 2) + pow(hitXYZ.y(), 2) );
 
-            double r  =sqrt( pow(hitXYZ.x(), 2) + pow(hitXYZ.y(), 2) );
+            //size_t idx = phi_index % 2;
+            //auto planeCorr = mFSTPlanesInner[planeId + idx];
+            //if ( r > 16.5 ){
+            //    planeCorr = mFSTPlanesOuter[planeId + idx];
+            //}
+            //double cdz = (h->getZ() - planeCorr->getO().Z());
 
-            size_t idx = phi_index % 2;
-            auto planeCorr = mFSTPlanesInner[planeId + idx];
-            if ( r > 16 ){
-                planeCorr = mFSTPlanesOuter[planeId + idx];
-            }
-            double cdz = (h->getZ() - planeCorr->getO().Z());
+            //if (mGenHistograms){
+            //    
+            //    ((TH2*)mHist[ "FstDiffZVsR" ])->Fill( r, dz );
 
-            if (mGenHistograms){
-                
-                ((TH2*)mHist[ "FstDiffZVsR" ])->Fill( r, dz );
-
-                if ( r < 16 ) {// inner
-                    mHist["FstDiffZVsPhiSliceInner"]->Fill( phi_slice, dz );
-                    mHist["CorrFstDiffZVsPhiSliceInner"]->Fill( phi_slice, cdz );
-                } else {
-                    mHist["FstDiffZVsPhiSliceOuter"]->Fill( phi_slice, dz );
-                    mHist["CorrFstDiffZVsPhiSliceOuter"]->Fill( phi_slice, cdz );
-                    mHist["FstDiffZVsPhiOuter"]->Fill( phi, dz );
-                }
-            }
-            // mHist[ "FstDiffZVsPhiSliceInner" ]->Fill( sqrt( pow(hitXYZ.x(), 2), pow(hitXYZ.y(), 2) ), dz );
-
+            //    if ( r < 16.5 ) {// inner
+            //        mHist["FstDiffZVsPhiSliceInner"]->Fill( phi_slice, dz );
+            //        mHist["CorrFstDiffZVsPhiSliceInner"]->Fill( phi_slice, cdz );
+            //    } else {
+            //        mHist["FstDiffZVsPhiSliceOuter"]->Fill( phi_slice, dz );
+            //        mHist["CorrFstDiffZVsPhiSliceOuter"]->Fill( phi_slice, cdz );
+            //        mHist["FstDiffZVsPhiOuter"]->Fill( phi, dz );
+            //    }
+            //}
+            //mHist[ "FstDiffZVsPhiSliceInner" ]->Fill( sqrt( pow(hitXYZ.x(), 2), pow(hitXYZ.y(), 2) ), dz );
+               
         }
         // start at 0 if PV not included, 1 otherwise 
         for (size_t i = firstFTTIndex; i < trackPoints.size(); i++) {
@@ -833,6 +944,7 @@ class TrackFitter {
     // Store the planes for FTT and FST
     vector<genfit::SharedPlanePtr> mFTTPlanes;
     vector<genfit::SharedPlanePtr> mFSTPlanes;
+    vector<genfit::SharedPlanePtr> mFSTPlanesCenter;
     vector<genfit::SharedPlanePtr> mFSTPlanesInner;
     vector<genfit::SharedPlanePtr> mFSTPlanesOuter;
 
@@ -844,7 +956,11 @@ class TrackFitter {
     // optional histograms, off by default
     std::map<std::string, TH1 *> mHist;
     bool mGenHistograms = false;
-
+    bool mMisaligned = false;
+    int mModuleMap[3][12] = {{1,6,0,11,5,10,4,9,3,8,2,7},
+                             {6,0,11,5,10,4,9,3,8,2,7,1},
+                             {1,6,0,11,5,10,4,9,3,8,2,7}};
+    int mSensorMap[3] = {2,0,1};
     // Main GenFit fitter instance
     std::unique_ptr<genfit::AbsKalmanFitter> mFitter = nullptr;
 
@@ -854,7 +970,8 @@ class TrackFitter {
 
 
     // det z locations loaded from geom or config
-    vector<double> mFSTZLocations, mFTTZLocations;
+    // Changed mFSTZLocations to a vector of vectors for the misaligned geometry
+    vector<double> mFTTZLocations, mFSTZLocations;
 
     // parameter ALIASED from mConfig wrt PV vertex
     double mVertexSigmaXY = 1;

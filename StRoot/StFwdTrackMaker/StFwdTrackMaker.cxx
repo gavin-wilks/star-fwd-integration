@@ -214,7 +214,7 @@ class ForwardTracker : public ForwardTrackMaker {
 
 
 //________________________________________________________________________
-StFwdTrackMaker::StFwdTrackMaker() : StMaker("fwdTrack"), mGenHistograms(false), mGenTree(false), mForwardTracker(nullptr), mForwardData(nullptr){
+StFwdTrackMaker::StFwdTrackMaker() : StMaker("fwdTrack"), mForwardTracker(nullptr), mForwardData(nullptr), mGenHistograms(false), mGenTree(false){
     SetAttr("useFtt",1);                 // Default Ftt on 
     SetAttr("useFst",1);                 // Default Fst on
     SetAttr("config", "config.xml");     // Default configuration file (user may override before Init())
@@ -264,7 +264,9 @@ int StFwdTrackMaker::Init() {
     mFwdConfig.load( configFile );
 
     if (mGenTree) {
-        mTreeFile = new TFile("mltree.root", "RECREATE");
+        // Allow user to specify the output TTree file in the config file
+        std::string name = mFwdConfig.get<string>("Output:tree", "mltree.root");
+        mTreeFile = new TFile(name.c_str(), "RECREATE");
         mTree = new TTree("Stg", "stg hits");
         mTree->Branch("n", &mTreeN, "n/I");
         mTree->Branch("x", mTreeX, "x[n]/F");
@@ -334,7 +336,7 @@ int StFwdTrackMaker::Init() {
                 n = name + "_h3";
                 mTreeCritTrackIds[(n)]; mTree->Branch(n.c_str(), &mTreeCritTrackIds[n]);
             }
-
+      
             if ( name == "Crit2_BDT" ){
                 string n = name + "_DeltaPhi";
                 mTreeCrits[(n)]; mTree->Branch(n.c_str(), &mTreeCrits[n]);
@@ -585,7 +587,7 @@ void StFwdTrackMaker::loadStgcHitsFromGEANT( FwdDataSource::McTrackMap_t &mcTrac
     } // loop on hits
 
     if (mGenTree){
-        LOG_INFO << "Saving " << mTreeN << " hits in Tree" << endm;
+        LOG_INFO << "Saving " << mTreeN << "Hits in Tree" << endm;
     }
 } // loadStgcHits
 
@@ -687,8 +689,10 @@ void StFwdTrackMaker::loadFstHitsFromStEvent( FwdDataSource::McTrackMap_t &mcTra
         hitCov3(0,0) = covmat[0][0]; hitCov3(0,1) = covmat[0][1]; hitCov3(0,2) = covmat[0][2];
         hitCov3(1,0) = covmat[1][0]; hitCov3(1,1) = covmat[1][1]; hitCov3(1,2) = covmat[1][2];
         hitCov3(2,0) = covmat[2][0]; hitCov3(2,1) = covmat[2][1]; hitCov3(2,2) = covmat[2][2];
-
+//added ladder and wafer Gavin 10.11.21
         FwdHit *fhit = new FwdHit(count++, hit->position().x(), hit->position().y(), hit->position().z(), hit->layer(), hit->idTruth(), hitCov3, mcTrackMap[hit->idTruth()]);
+        fhit->setModule(hit->ladder());
+        fhit->setSensor(hit->wafer());
         // LOG_INFO << "FST HIT( " << hit->position().x() << ", " << hit->position().y() << ", " << hit->position().z() << ", " << hit->layer() << endm;
         size_t index = hit->layer()-4;
         // LOG_INFO << "FST Layer = " << hit->layer() << ", " << TString::Format("fsi%luHitMapZ", index).Data() << endm;
@@ -890,12 +894,11 @@ int StFwdTrackMaker::Make() {
 
     // Process single event
     mForwardTracker->doEvent();
-
+   
     // fill the ttree if we have it turned on (mGenTree)
     FillTTree();
 
     LOG_DEBUG << "Forward tracking on this event took " << (FwdTrackerUtils::nowNanoSecond() - itStart) * 1e-6 << " ms" << endm;
-
 
     StEvent *stEvent = static_cast<StEvent *>(GetInputDS("StEvent"));
 
@@ -962,7 +965,7 @@ void StFwdTrackMaker::FillTTree(){
                 string name = crit->getName();
 
                 // special, save all hit info for this one
-                
+               
 
                 if ( name == "Crit2_BDT" ){
                     mTreeCrits["Crit2_BDT_DeltaPhi"].clear(); 

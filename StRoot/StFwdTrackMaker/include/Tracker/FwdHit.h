@@ -67,7 +67,7 @@ class McTrack {
  */
 class FwdHit : public KiTrack::IHit {
   public:
-    FwdHit(unsigned int id, float x, float y, float z, int vid, int tid,
+    FwdHit(unsigned int id, float x, float y, float z, int vid, int tid, 
            TMatrixDSym covmat, std::shared_ptr<McTrack> mcTrack = nullptr )
         : KiTrack::IHit() {
         _id = id;
@@ -94,12 +94,20 @@ class FwdHit : public KiTrack::IHit {
         }
     };
 
+    int getModule() { return _mid; }
+    int getSensor() { return _sid; }
+    
+    void setModule(int mid) { _mid = mid; }
+    void setSensor(int sid) { _sid = sid; }
+
     const KiTrack::ISectorSystem *getSectorSystem() const {
         return FwdSystem::sInstance;
     }
 
     int _tid; // aka ID truth
     int _vid; // volume id
+    int _mid; // module id
+    int _sid; // sensor id
     unsigned int _id; // just a unique id for each hit in this event.
     std::shared_ptr<McTrack> _mcTrack;
     TMatrixDSym _covmat;

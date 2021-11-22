@@ -59,7 +59,7 @@ class FwdGeomUtils {
             return 0.0;
         }
 
-        vector<double> fstZ( vector<double> defaultZ ) {
+        /*vector<double> fstZ( vector<double> defaultZ ) {
             double z0 = fstZ(0);
             if ( z0 > 1.0 ) { // returns 0 on faiure
                 vector<double> z = {z0, fstZ(1), fstZ(2)};
@@ -81,7 +81,56 @@ class FwdGeomUtils {
                 return _matrix->GetTranslation()[2];
             }
             return 0.0;
+        }*/
+        
+        vector<double> fstmZ( vector<double> defaultZ ) {
+	    double z0 = fstmZ(0);
+            if ( z0 > 1.0 ) { // returns 0 on failure
+                vector<double> z;
+                for(int i_si = 0; i_si < 108; i_si++) {
+                    z.push_back(fstmZ(i_si));
+                }
+                return z;
+            }
+            return defaultZ;
+	}
+
+        double fstmZ( int index ) { 
+            stringstream spath;
+            spath << "/HALL_1/CAVE_1/FSTM_1/FTUS_" << (index + 1) << "/";
+            bool can = cd( spath.str().c_str() );
+            if ( can && _matrix != nullptr ){
+                return _matrix->GetTranslation()[2];
+            }
+            return 0.0;
         }
+
+        vector<double> fstZ( vector<double> defaultZ ) {
+	    double z0 = fstZ(0,0,0);
+            if ( z0 > 1.0 ) { // returns 0 on failure
+                vector<double> z;
+                for(int i_d = 0; i_d < 3; i_d++) {
+                    for(int i_m = 0; i_m < 12; i_m++){
+                        for(int i_s = 0; i_s < 3; i_s++){
+                            z.push_back(fstZ(i_d,i_m,i_s));
+                        }
+                    }
+                }
+                return z;
+            }
+            return defaultZ;
+	}
+
+        double fstZ( int did, int mid, int sid ) {
+            stringstream spath;
+            spath << "/HALL_1/CAVE_1/FSTM_1/FSTD_" << (did + 4) << "/FSTW_" << (mid + 1) << "/FTUS_" << (sid + 1) << "/";
+            bool can = cd( spath.str().c_str() );
+            if ( can && _matrix != nullptr ){
+                return _matrix->GetTranslation()[2];
+            }
+            return 0.0;
+        }
+
 
     protected:
     TGeoVolume    *_volume    = nullptr;
