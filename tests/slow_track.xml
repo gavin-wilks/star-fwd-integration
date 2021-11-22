@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <Output url="/gpfs01/star/pwg/gwilks3/folder/outslow_reco/SlowSimDefault.root" tree="/gpfs01/star/pwg/gwilks3/folder/outtreeslow_reco/SlowTree.root" />
+	<Geometry misaligned="moption">/star/u/gwilks3/fst/star-fwd-integration_20210602/fGeom_reco_shift2in.root</Geometry>
+        <!--Geometry>/star/u/gwilks3/fst/star-fwd-integration_20210602/fGeom_origm_shift2in.root</Geometry-->
+    <Source ftt="GEANT" />
+
+    <TrackFinder nIterations="1">
+        <Iteration nPhiSlices="8">
+            <SegmentBuilder>
+                <Criteria name="Crit2_RZRatio" min="0.999" max="1.131" />
+                <Criteria name="Crit2_DeltaRho" min="-6.1" max="9.9"/>
+                <Criteria name="Crit2_DeltaPhi" min="0" max="13.4" />
+                <Criteria name="Crit2_StraightTrackRatio" min="0.81" max="1.35"/>
+            </SegmentBuilder>
+
+            <ThreeHitSegments>
+                <Criteria name="Crit3_3DAngle" min="0" max="20" />
+                <Criteria name="Crit3_PT" min="0" max="100" />
+                <Criteria name="Crit3_ChangeRZRatio" min="0" max="1.11" />
+                <Criteria name="Crit3_2DAngle" min="0" max="15" />
+            </ThreeHitSegments>
+        </Iteration>
+
+        <Connector distance="1"/>
+
+        <SubsetNN active="true" min-hits-on-track="4" >
+            <Omega>0.99</Omega>
+            <StableThreshold>0.001</StableThreshold>
+        </SubsetNN> 
+
+        <HitRemover active="true" />
+    </TrackFinder>
+
+    <TrackFitter  refitSi="true" mcSeed="false" >
+    <KalmanFitterRefTrack MaxFailedHits="1" MaxIterations="4" />
+        <Vertex sigmaXY="0.1" sigmaZ="30.0" includeInFit="true" />
+    </TrackFitter>
+</config>
