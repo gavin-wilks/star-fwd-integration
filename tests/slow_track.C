@@ -1,5 +1,6 @@
 //usr/bin/env root4star -l -b -q  $0; exit $?
 // that is a valid shebang to run script as executable
+#include <TError.h>
 
 TFile *output = 0;
 
@@ -11,6 +12,9 @@ void slow_track(  int n = 100,
     TString _geom = geom;
 
     //bool SiIneff = false;    
+
+    //gSystem->SetAclicMode(TSystem::kDebug);
+    gErrorIgnoreLevel=0; 
 
     TString _chain;
 
@@ -33,9 +37,9 @@ void slow_track(  int n = 100,
     gSystem->Load("libStEventUtilities.so");
     gSystem->Load("libStFwdTrackMaker.so");
 
-    StFttSlowSimMaker *fttSlowSim = new StFttSlowSimMaker();
+    StFttFastSimMaker *fttFastSim = new StFttFastSimMaker();
     cout << "Adding StFttSlowSimMaker to chain" << endl;
-    chain->AddMaker(fttSlowSim);
+    chain->AddMaker(fttFastSim);
 
     // Create fast simulator and add after event maker
     StFstSlowSimMaker *fstSlowSim = new StFstSlowSimMaker();
@@ -51,13 +55,13 @@ void slow_track(  int n = 100,
     cout << "Adding StFstSlowSimMaker to chain" << endl;
     chain->AddMaker(fstSlowSim);
 
-    /*StFwdTrackMaker *gmk = new StFwdTrackMaker();
+    StFwdTrackMaker *gmk = new StFwdTrackMaker();
     // config file set here overides chain opt
     gmk->SetConfigFile( configFile );
     gmk->SetGenerateTree( true );
     gmk->SetGenerateHistograms( true ); //!!!!!   for mc hits   !!!!!// 
     chain->AddMaker(gmk);
-*/
+
     chain->Init();
 
     //_____________________________________________________________________________

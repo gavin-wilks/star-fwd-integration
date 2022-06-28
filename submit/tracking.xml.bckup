@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+ <job nProcesses="&njobs;" simulateSubmission="true">
+  <command>
+    starver dev
+    source rcf-env.sh
+    root4star -l -q -b &style;_track.C\(1000,\"/gpfs01/star/pwg/gwilks3/&folder;/out/sim_$JOBINDEX.fzd\",\"&dir;/submit/configs/&style;_track_&geomtag;_&folder;_$JOBINDEX.xml\",\"&geomtag;\",\"/gpfs01/star/pwg/gwilks3/&folder;/fstQA_&style;_&geomtag;/fstQA_$JOBINDEX.root\"\) 
+  </command>
+  <stdout URL="file:/gpfs01/star/pwg/gwilks3/&folder;/log/&style;&geomtag;_$JOBID.out" />
+  <stderr URL="file:/gpfs01/star/pwg/gwilks3/&folder;/log/&style;&geomtag;_$JOBID.err" />
+  <Generator>
+   <Location>./schedinfo</Location>
+  </Generator>
+   <SandBox installer="ZIP">
+    <Package> 
+     <!--File>file:./run.csh</File--> 
+     <File>file:&dir;/tests/&style;_track.C</File>
+     <File>file:&dir;/.sl73_gcc485/</File>
+     <File>file:&dir;/rcf-env.sh</File>
+     <File>file:&dir;/StRoot</File>
+    
+    </Package>
+  </SandBox>
+
+ </job>

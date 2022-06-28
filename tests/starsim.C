@@ -26,7 +26,7 @@ float   _etamx = 4.0;   // max eta to simulate
 
 TString _geometry = "dev2022m";
 TString DBV; 
-TString SDT = "sdt20211112";
+TString SDT = "sdt20220421";
 
 //______________________________________________________________________________________
 

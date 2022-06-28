@@ -488,13 +488,13 @@ class TrackFitter {
         genfit::MeasuredStateOnPlane tst = fitTrack->getFittedState(1);
         auto TCM = fitTrack->getCardinalRep()->get6DCov(tst);
         //  can get the track length if needed 
-        // double len = fitTrack->getCardinalRep()->extrapolateToPlane(tst, detSi, false, true);
+        double len = fitTrack->getCardinalRep()->extrapolateToPlane(tst, detSi, false, true);
 
         TCM = fitTrack->getCardinalRep()->get6DCov(tst);
         
         // can get the projected positions if needed
-        // float x = tst.getPos().X();
-        // float y = tst.getPos().Y();
+        float x = tst.getPos().X();
+        float y = tst.getPos().Y();
         // and the uncertainties
         // LOG_INFO << "Track Uncertainty at FST (plane=" << si_plane << ") @ x= " << x << ", y= " << y << " : " << sqrt(TCM(0, 0)) << ", " << sqrt(TCM(1, 1)) << endm;
 
@@ -556,7 +556,7 @@ class TrackFitter {
     TVector3 refitTrackWithSiHits(genfit::Track *originalTrack, Seed_t si_hits) {
         // mem leak, global track is overwritten without delete.
         TVector3 pOrig = originalTrack->getCardinalRep()->getMom(originalTrack->getFittedState(1, originalTrack->getCardinalRep()));
-        // auto cardinalStatus = originalTrack->getFitStatus(originalTrack->getCardinalRep());
+        auto cardinalStatus = originalTrack->getFitStatus(originalTrack->getCardinalRep());
 
         if (originalTrack->getFitStatus(originalTrack->getCardinalRep())->isFitConverged() == false) {
             // in this case the original track did not converge so we should not refit. 

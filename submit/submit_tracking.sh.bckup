@@ -1,0 +1,44 @@
+#!/bin/bash
+date
+if [ $# -ne 4 ]
+ then
+ echo -e "\033[31m Please input your filelist, and try a again ! bye. \033[0m"
+ exit 1
+fi
+
+style=$1 #fast, full, slow
+folder=$2 #whatever folder you used for simulation
+geomtag=$3 #dev2021, dev2022, dev2022m, dev2022ms
+njobs=$4 # how many jobs you are submitting. should match njobs for submission of starsim jobs
+moption=true
+dir=$(echo "`pwd`" | sed 's:/:\\/:g')
+njobsf=$(( ${njobs}-1 ))
+
+if [[ ${geomtag} == dev2022 || ${geomtag} == dev2021 ]]
+  then
+    moption=false
+fi
+
+echo "jnobsf = ${njobsf}"
+echo "pwd = ${dir}"
+echo "Style = ${style}"
+echo "Geometry Tag = ${geomtag}"
+echo "Folder = ${folder}"
+
+[ -d log ] || mkdir -p log
+[ -d script ] || mkdir -p script
+[ -d configs ] || mkdir -p configs
+
+mkdir -p /gpfs01/star/pwg/gwilks3/${folder}/outtree${style}_${geomtag}
+mkdir -p /gpfs01/star/pwg/gwilks3/${folder}/out${style}_${geomtag}
+mkdir -p /gpfs01/star/pwg/gwilks3/${folder}/log
+mkdir -p /gpfs01/star/pwg/gwilks3/${folder}/fstQA_${style}_${geomtag}
+
+sed "s/pwd/${dir}/g;s/njobs/${njobs}/g;s/geomtag/${geomtag}/g;s/style/${style}/g;s/folder/${folder}/g" schedule_tracking.xml > schedule_tracking_${folder}_${style}_${geomtag}.xml
+
+for FILE in $(seq 0 ${njobsf})
+do 
+     sed "s/geomtag/${geomtag}/g;s/pwd/${dir}/g;s/moption/${moption}/g;s/folder/${folder}/g;s/SimDefault/SimDefault_${FILE}/g;s/Tree.root/Tree_${FILE}.root/g" ../tests/${style}_track.xml > configs/${style}_track_${geomtag}_${folder}_${FILE}.xml         
+done
+
+sums-submit -p bnl_condor_benchmark_user schedule_tracking_${folder}_${style}_${geomtag}.xml | tee -a schedule_tracking_${folder}_${style}_${geomtag}.log

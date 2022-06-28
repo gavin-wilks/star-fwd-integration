@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <Output url="/gpfs01/star/pwg/gwilks3/folder/outslow_reco/SlowSimDefault.root" tree="/gpfs01/star/pwg/gwilks3/folder/outtreeslow_reco/SlowTree.root" />
-	<Geometry misaligned="moption">/star/u/gwilks3/fst/star-fwd-integration_20210602/fGeom_reco_shift2in.root</Geometry>
-        <!--Geometry>/star/u/gwilks3/fst/star-fwd-integration_20210602/fGeom_origm_shift2in.root</Geometry-->
+    <Output url="./Hist.root" tree="./Tree.root" />
+	<Geometry misaligned="moption">dir/tests/geometries/fGeom_geomtag.root</Geometry>
     <Source ftt="GEANT" />
 
     <TrackFinder nIterations="1">

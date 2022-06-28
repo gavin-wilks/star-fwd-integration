@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+ <job nProcesses="&njobs;" simulateSubmission="false">
+  <command>
+    starver dev
+    source rcf-env.sh
+    root4star -l -b -q starsim.C\(\"sim\",500,10,\"mu+\",0.2,5.0,2.5,4.0,$JOBINDEX,\"&geomtag;\"\) 
+  </command>
+
+  <stdout URL="file:&logdir;/fzd_$JOBID.out" />
+  <stderr URL="file:&logdir;/fzd_$JOBID.err" />
+
+  <Generator>
+   <Location>./schedinfo</Location>
+  </Generator>
+  <SandBox installer="ZIP">
+   <Package> 
+    <File>file:&dir;/.sl73_gcc485/</File> 
+    <File>file:&dir;/tests/starsim.C</File>
+    <File>file:&dir;/rcf-env.sh</File>
+    <File>file:&dir;/StarDb/</File>
+    <File>file:&dir;/StarVMC/</File>
+   </Package>
+  </SandBox>
+
+  <output fromScratch="*.fzd" toURL="file:&outdir;/" />
+ </job>

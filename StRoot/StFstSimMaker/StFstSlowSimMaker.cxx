@@ -393,20 +393,20 @@ void StFstSlowSimMaker::FillSilicon(StEvent *event) {
                                 mchits.push_back(hitpos_mc);
 				TVector2 hitpos_rc(fsihit->position().x(), fsihit->position().y());
 
-				hTrutHitYXDisk->Fill(x, y, disk);
-				hTrutHitRDisk->Fill(hitpos_mc.Mod(), disk);
+				//hTrutHitYXDisk->Fill(x, y, disk);
+				//hTrutHitRDisk->Fill(hitpos_mc.Mod(), disk);
 			
                                 double rrc = hitpos_rc.Mod();
                                 double prc = hitpos_rc.Phi();
                                 double rmc = hitpos_mc.Mod();
                                 double pmc = hitpos_mc.Phi();
 	                        
-				if (disk == 4)
-					hTrutHitRShower[0]->Fill(hitpos_mc.Mod(), isShower);
-				if (disk == 5)
-					hTrutHitRShower[1]->Fill(hitpos_mc.Mod(), isShower);
-				if (disk == 6)
-					hTrutHitRShower[2]->Fill(hitpos_mc.Mod(), isShower);
+				//if (disk == 4)
+				//	hTrutHitRShower[0]->Fill(hitpos_mc.Mod(), isShower);
+				//if (disk == 5)
+				//	hTrutHitRShower[1]->Fill(hitpos_mc.Mod(), isShower);
+				//if (disk == 6)
+				//	hTrutHitRShower[2]->Fill(hitpos_mc.Mod(), isShower);
 
                                 
                                 hMCHit[disk-4]->Fill(x,y);
@@ -421,24 +421,24 @@ void StFstSlowSimMaker::FillSilicon(StEvent *event) {
                                   hRCPhiZOut[disk-4]->Fill(prc * 180.0 / TMath::Pi(), z);
                                 }
 
-				hTrutHitPhiDisk->Fill(hitpos_mc.Phi() * 180.0 / TMath::Pi(), disk);
-				hTrutHitPhiZ->Fill(hitpos_mc.Phi() * 180.0 / TMath::Pi(), z);
-				hRecoHitYXDisk->Fill(fsihit->position().x(), fsihit->position().y(), disk);
-				hRecoHitRDisk->Fill(hitpos_rc.Mod(), disk);
-				hRecoHitPhiDisk->Fill(hitpos_rc.Phi() * 180.0 / TMath::Pi(), disk);
-				hRecoHitPhiZ->Fill(hitpos_rc.Phi() * 180.0 / TMath::Pi(), z);
-				hGlobalDRDisk->Fill(hitpos_rc.Mod() - hitpos_mc.Mod(), disk);
-				hGlobalZ->Fill(fsihit->position().z());
+				//hTrutHitPhiDisk->Fill(hitpos_mc.Phi() * 180.0 / TMath::Pi(), disk);
+				//hTrutHitPhiZ->Fill(hitpos_mc.Phi() * 180.0 / TMath::Pi(), z);
+				//hRecoHitYXDisk->Fill(fsihit->position().x(), fsihit->position().y(), disk);
+				//hRecoHitRDisk->Fill(hitpos_rc.Mod(), disk);
+				//hRecoHitPhiDisk->Fill(hitpos_rc.Phi() * 180.0 / TMath::Pi(), disk);
+				//hRecoHitPhiZ->Fill(hitpos_rc.Phi() * 180.0 / TMath::Pi(), z);
+				//hGlobalDRDisk->Fill(hitpos_rc.Mod() - hitpos_mc.Mod(), disk);
+				//hGlobalZ->Fill(fsihit->position().z());
 
-				//cout << "CHECK : " << fsihit->position().x()-x << " |||  "<<  fsihit->position().y()-y << endl;
-				h2GlobalXY->Fill(x, y);
-				h2GlobalSmearedXY->Fill(fsihit->position().x(), fsihit->position().y());
-				h2GlobalDeltaXY->Fill(fsihit->position().x() - x, fsihit->position().y() - y);
-				h3GlobalDeltaXYDisk->Fill(fsihit->position().x() - x, fsihit->position().y() - y, disk);
+				////cout << "CHECK : " << fsihit->position().x()-x << " |||  "<<  fsihit->position().y()-y << endl;
+				//h2GlobalXY->Fill(x, y);
+				//h2GlobalSmearedXY->Fill(fsihit->position().x(), fsihit->position().y());
+				//h2GlobalDeltaXY->Fill(fsihit->position().x() - x, fsihit->position().y() - y);
+				//h3GlobalDeltaXYDisk->Fill(fsihit->position().x() - x, fsihit->position().y() - y, disk);
 
-				h3GlobalDeltaXYR->Fill(fsihit->position().x() - x, fsihit->position().y() - y, sqrt(pow(fsihit->position().x(), 2) + pow(fsihit->position().y(), 2)));
-			        hRResiduals[disk][r_index]->Fill(hitpos_rc.Mod() - hitpos_mc.Mod());
-				hPhiResiduals[disk][r_index]->Fill(hitpos_rc.Phi() - hitpos_mc.Phi());    
+				//h3GlobalDeltaXYR->Fill(fsihit->position().x() - x, fsihit->position().y() - y, sqrt(pow(fsihit->position().x(), 2) + pow(fsihit->position().y(), 2)));
+			        //hRResiduals[disk-4][r_index]->Fill(hitpos_rc.Mod() - hitpos_mc.Mod());
+				//hPhiResiduals[disk-4][r_index]->Fill(hitpos_rc.Phi() - hitpos_mc.Phi());    
                         }
 		}
 		else { // Hit on this strip already exists, adding energy to old hit
@@ -504,7 +504,7 @@ void StFstSlowSimMaker::FillSilicon(StEvent *event) {
 int StFstSlowSimMaker::Finish() {
 	if(mHist){
 		fOut->cd();
-		hTrutHitYXDisk->Write();
+		/*hTrutHitYXDisk->Write();
 		hTrutHitRDisk->Write();
 		hTrutHitRShower[0]->Write();
 		hTrutHitRShower[1]->Write();
@@ -521,7 +521,7 @@ int StFstSlowSimMaker::Finish() {
 		h2GlobalXY->Write();
 		h2GlobalSmearedXY->Write();
 		h2GlobalDeltaXY->Write();
-		h3GlobalDeltaXYDisk->Write();
+		h3GlobalDeltaXYDisk->Write();*/
                 hMCHit[0]->Write();
                 hMCHit[1]->Write();
                 hMCHit[2]->Write();

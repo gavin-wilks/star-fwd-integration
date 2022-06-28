@@ -142,15 +142,17 @@ class ForwardTrackMaker {
             float vmin = mConfig.get<float>(p + ":min", 0);
             float vmax = mConfig.get<float>(p + ":max", 1);
             
-            KiTrack::ICriterion * crit = nullptr;
-            if ( name == "Crit2_BDT" ){
-                crit = new BDTCrit2( vmin, vmax, mConfig.get<std::string>( p + ":weights", "bdt2.xml" ) );
-            } else if ( name == "Crit3_BDT" ){
-                crit = new BDTCrit3( vmin, vmax, mConfig.get<std::string>( p + ":weights", "bdt3.xml" ) );
-            }
-            else {
-                crit = KiTrack::Criteria::createCriterion(name, vmin, vmax);
-            }
+            //KiTrack::ICriterion * crit = nullptr;
+            //if ( name == "Crit2_BDT" ){
+            //    crit = new BDTCrit2( vmin, vmax, mConfig.get<std::string>( p + ":weights", "bdt2.xml" ) );
+            //} else if ( name == "Crit3_BDT" ){
+            //    crit = new BDTCrit3( vmin, vmax, mConfig.get<std::string>( p + ":weights", "bdt3.xml" ) );
+            //}
+            //else {
+            //    crit = KiTrack::Criteria::createCriterion(name, vmin, vmax);
+            //}
+
+            auto crit = KiTrack::Criteria::createCriterion(name, vmin, vmax); // Gavin 04.28.2022 | edit back to original since I do not have the bdt2/3.xml files
 
             crit->setSaveValues(mSaveCriteriaValues);
 
